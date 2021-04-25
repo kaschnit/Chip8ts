@@ -211,7 +211,7 @@ export class Chip8 {
      */
     private call(address: number): void {
         // TODO
-        console.log("Calling", address)
+        console.log("Calling", address);
     }
 
     /*
@@ -472,7 +472,7 @@ export class Chip8 {
      */
     private skipIfKeypress(vx: number): void {
         if (this.keyreg.get(this.vreg.get(vx))) {
-          this.pc.increment();
+            this.pc.increment();
         }
     }
 
@@ -483,7 +483,7 @@ export class Chip8 {
      */
     private skipIfNotKeypress(vx: number): void {
         if (!this.keyreg.get(this.vreg.get(vx))) {
-          this.pc.increment();
+            this.pc.increment();
         }
     }
 

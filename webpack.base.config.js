@@ -2,7 +2,7 @@ const path = require("path");
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 
 const paths = {
-    build: path.resolve(__dirname, "build")
+    build: path.resolve(__dirname, "build"),
 };
 
 const baseConfig = {
@@ -10,35 +10,38 @@ const baseConfig = {
     output: {
         filename: "index.js",
         path: paths.build,
-        publicPath: "/"
+        publicPath: "/",
     },
     module: {
         rules: [
-            {	// typescript and javascript with or witthout JSX
+            {
+                // typescript and javascript with or witthout JSX
                 test: /\.(t|j)sx?$/,
                 use: ["ts-loader"],
-                exclude: /node_modules/
+                exclude: /node_modules/,
             },
-            {	// sass
+            {
+                // sass
                 test: /\.scss$/,
                 use: [
                     MiniCssExtractPlugin.loader,
                     "css-loader", // translates CSS into CommonJS
-                    "sass-loader" // compiles Sass to CSS
-                ]
+                    "sass-loader", // compiles Sass to CSS
+                ],
             },
-            {	// css
+            {
+                // css
                 test: /\.css$/,
                 include: /node_modules/,
                 use: [
                     MiniCssExtractPlugin.loader,
                     "css-loader", // translates CSS into CommonJS
-                ]
+                ],
             },
             {
                 test: /\.woff($|\?)|\.woff2($|\?)|\.ttf($|\?)|\.eot($|\?)|\.svg($|\?)/,
-                use: ["url-loader"]
-            }
+                use: ["url-loader"],
+            },
         ],
     },
     resolve: {
@@ -48,5 +51,5 @@ const baseConfig = {
 
 module.exports = {
     paths,
-    baseConfig
+    baseConfig,
 };

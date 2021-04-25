@@ -5,9 +5,9 @@ module.exports = {
     ...baseConfig,
     devtool: "source-map",
     mode: "development",
-	plugins: [
+    plugins: [
         new MiniCssExtractPlugin({
-          filename: "style.css"
+            filename: "style.css",
         }),
     ],
     devServer: {
