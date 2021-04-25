@@ -1,4 +1,6 @@
+import { BadInstructionError } from "src/exception/exceptions";
 import { Graphics } from "./graphics";
+import { KeyRegs } from "./keyregs";
 import { Memory } from "./memory";
 import { ProgramCounter } from "./programCounter";
 import { Stack } from "./stack";
@@ -12,7 +14,8 @@ export class Chip8 {
     private graphics: Graphics;
     private delayTimer: DelayTimer;
     private soundTimer: SoundTimer;
-    private vregs: VRegisters;
+    private vreg: VRegisters;
+    private keyreg: KeyRegs;
     private awaitKeyReg: number | undefined;
     private ireg: number;
 
@@ -23,7 +26,8 @@ export class Chip8 {
         graphics: Graphics,
         delayTimer: DelayTimer,
         soundTimer: SoundTimer,
-        vregs: VRegisters
+        vregs: VRegisters,
+        keyreg: KeyRegs
     ) {
         this.memory = memory;
         this.stack = stack;
@@ -31,13 +35,163 @@ export class Chip8 {
         this.graphics = graphics;
         this.delayTimer = delayTimer;
         this.soundTimer = soundTimer;
-        this.vregs = vregs;
+        this.vreg = vregs;
+        this.keyreg = keyreg;
         this.awaitKeyReg = undefined;
-
         this.ireg = 0;
     }
 
-    runCycle(): void {}
+    public runCycle(): void {
+        if (this.awaitKeyReg !== null) {
+            return;
+        }
+
+        // graphics have not yet changed this cycle
+        this.graphics.setClean();
+
+        // instruction is 16bit
+        const instr = this.memory.load16(this.pc.value);
+
+        // get commonly used hex digits from instruction
+        const hex4 = (instr & 0xf000) >> 12;
+        const hex3 = (instr & 0x0f00) >> 8;
+        const hex2 = (instr & 0x00f0) >> 4;
+
+        // execute instruction based on opcode
+        switch (hex4) {
+            case 0x0:
+                switch (instr & 0x0ff) {
+                    case 0xe0:
+                        this.clearDisplay();
+                        break;
+                    case 0xee:
+                        this.returnInstruction();
+                        break;
+                    default:
+                        this.call(instr & 0xfff);
+                        break;
+                }
+                break;
+            case 0x1:
+                this.goto(instr & 0xfff);
+                break;
+            case 0x2:
+                this.functionCall(instr & 0xfff);
+                break;
+            case 0x3:
+                this.skipIfEqualsConst(hex3, instr & 0xff);
+                break;
+            case 0x4:
+                this.skipIfNequalConst(hex3, instr & 0xff);
+                break;
+            case 0x5:
+                this.skipIfEqualsReg(hex3, hex2);
+                break;
+            case 0x6:
+                this.assignConst(hex3, instr & 0xff);
+                break;
+            case 0x7:
+                this.addConst(hex3, instr & 0xff);
+                break;
+            case 0x8:
+                switch (instr & 0xf) {
+                    case 0x0:
+                        this.assignReg(hex3, hex2);
+                        break;
+                    case 0x1:
+                        this.bitwiseOr(hex3, hex2);
+                        break;
+                    case 0x2:
+                        this.bitwiseAnd(hex3, hex2);
+                        break;
+                    case 0x3:
+                        this.bitwiseXor(hex3, hex2);
+                        break;
+                    case 0x4:
+                        this.addReg(hex3, hex2);
+                        break;
+                    case 0x5:
+                        this.subReg(hex3, hex2);
+                        break;
+                    case 0x6:
+                        this.shiftRight(hex3);
+                        break;
+                    case 0x7:
+                        this.subRegOpposite(hex3, hex2);
+                        break;
+                    case 0xe:
+                        this.shiftLeft(hex3);
+                        break;
+                    default:
+                        throw new BadInstructionError(instr);
+                }
+                break;
+            case 0x9:
+                this.skipIfNequalReg(hex3, hex2);
+                break;
+            case 0xa:
+                this.setIreg(instr & 0xfff);
+                break;
+            case 0xb:
+                this.jump(instr & 0xfff);
+                break;
+            case 0xc:
+                this.setRand(hex3, instr & 0xff);
+                break;
+            case 0xd:
+                this.drawSprite(hex3, hex2, instr & 0xf);
+                break;
+            case 0xe:
+                switch (instr & 0xff) {
+                    case 0x9e:
+                        this.skipIfKeypress(hex3);
+                        break;
+                    case 0xa1:
+                        this.skipIfNotKeypress(hex3);
+                        break;
+                    default:
+                        throw new BadInstructionError(instr);
+                }
+                break;
+            case 0xf:
+                switch (instr & 0x0ff) {
+                    case 0x07:
+                        this.getDelayTimer(hex3);
+                        break;
+                    case 0x0a:
+                        this.awaitGetKeyPress(hex3);
+                        break;
+                    case 0x15:
+                        this.setDelayTimer(hex3);
+                        break;
+                    case 0x18:
+                        this.setSoundTimer(hex3);
+                        break;
+                    case 0x1e:
+                        this.addRegToI(hex3);
+                        break;
+                    case 0x29:
+                        this.setIToSprite(hex3);
+                        break;
+                    case 0x33:
+                        this.setBCD(hex3);
+                        break;
+                    case 0x55:
+                        this.regDump(hex3);
+                        break;
+                    case 0x65:
+                        this.regLoad(hex3);
+                        break;
+                    default:
+                        throw new BadInstructionError(instr);
+                }
+                break;
+            default:
+                throw new BadInstructionError(instr);
+        }
+
+        this.pc.increment();
+    }
 
     /*
      *	OPCODES
@@ -55,14 +209,16 @@ export class Chip8 {
      *	0NNN
      *	Calls RCA 1802 program at address NNN. Not necessary for most ROMs.
      */
-    private call(address: number): void {}
+    private call(address: number): void {
+        // TODO
+    }
 
     /*
      *	00E0
      *	Clears the screen.
      */
     private clearDisplay(): void {
-        // this.graphics.clear();
+        this.graphics.clear();
     }
 
     /*
@@ -98,7 +254,7 @@ export class Chip8 {
      *	(Usually the next instruction is a jump to skip a code block).
      */
     private skipIfEqualsConst(vx: number, val: number): void {
-        if (this.vregs[vx] === val) {
+        if (this.vreg.get(vx) === val) {
             this.pc.increment();
         }
     }
@@ -109,7 +265,7 @@ export class Chip8 {
      *	(Usually the next instruction is a jump to skip a code block).
      */
     private skipIfNequalConst(vx: number, val: number): void {
-        if (this.vregs[vx] !== val) {
+        if (this.vreg.get(vx) !== val) {
             this.pc.increment();
         }
     }
@@ -120,7 +276,7 @@ export class Chip8 {
      *	(Usually the next instruction is a jump to skip a code block).
      */
     private skipIfEqualsReg(vx: number, vy: number): void {
-        if (this.vregs[vx] === this.vregs[vy]) {
+        if (this.vreg.get(vx) === this.vreg.get(vy)) {
             this.pc.increment();
         }
     }
@@ -130,7 +286,7 @@ export class Chip8 {
      *	Sets VX to NN.
      */
     private assignConst(vx: number, val: number): void {
-        this.vregs[vx] = val;
+        this.vreg.set(vx, val);
     }
 
     /*
@@ -138,7 +294,7 @@ export class Chip8 {
      *	Adds NN to VX. (Carry flag is not changed).
      */
     private addConst(vx: number, val: number): void {
-        this.vregs[vx] += val;
+        this.vreg.set(vx, this.vreg.get(vx) + val);
     }
 
     /*
@@ -146,7 +302,7 @@ export class Chip8 {
      *	Sets VX to the value of VY.
      */
     private assignReg(vx: number, vy: number): void {
-        this.vregs[vx] = this.vregs[vy];
+        this.vreg.set(vx, this.vreg.get(vy));
     }
 
     /*
@@ -154,7 +310,7 @@ export class Chip8 {
      *	Sets VX to VX or VY. (Bitwise OR operation).
      */
     private bitwiseOr(vx: number, vy: number): void {
-        this.vregs[vx] |= this.vregs[vy];
+        this.vreg.set(vx, this.vreg.get(vx) | this.vreg.get(vy));
     }
 
     /*
@@ -162,7 +318,7 @@ export class Chip8 {
      *	Sets VX to VX and VY. (Bitwise AND operation).
      */
     private bitwiseAnd(vx: number, vy: number): void {
-        this.vregs[vx] &= this.vregs[vy];
+        this.vreg.set(vx, this.vreg.get(vx) & this.vreg.get(vy));
     }
 
     /*
@@ -170,7 +326,7 @@ export class Chip8 {
      *	Sets VX to VX xor VY. (Bitwise XOR operation).
      */
     private bitwiseXor(vx: number, vy: number): void {
-        this.vregs[vx] ^= this.vregs[vy];
+        this.vreg.set(vx, this.vreg.get(vx) ^ this.vreg.get(vy));
     }
 
     /*
@@ -179,13 +335,13 @@ export class Chip8 {
      */
     private addReg(vx: number, vy: number): void {
         // add into result of >8 bits
-        const result: number = this.vregs[vx] + this.vregs[vy];
+        const result = this.vreg.get(vx) + this.vreg.get(vy);
 
         // set Vf to 1 if carry-out happened (value of bit 9 is 1 if carry-out)
-        this.vregs[0xf] = (result >> 8) & 0x1;
+        this.vreg.set(0xf, (result >> 8) & 0x1);
 
         // mask down to 8 bit
-        this.vregs[vx] = result;
+        this.vreg.set(vx, result);
     }
 
     /*
@@ -194,10 +350,10 @@ export class Chip8 {
      */
     private subReg(vx: number, vy: number): void {
         // set Vf to 0 if borrow; set to 1 if no borrow
-        this.vregs[0xf] = this.vregs[vx] >= this.vregs[vy] ? 1 : 0;
+        this.vreg.set(0xf, this.vreg.get(vx) >= this.vreg.get(vy) ? 1 : 0);
 
         // subtract and keep to 8 bits
-        this.vregs[vx] -= this.vregs[vy];
+        this.vreg.set(vx, this.vreg.get(vx) - this.vreg.get(vy));
     }
 
     /*
@@ -206,8 +362,8 @@ export class Chip8 {
      */
     private shiftRight(vx: number): void {
         // store lsb in Vf
-        this.vregs[0xf] = this.vregs[vx] & 0x1;
-        this.vregs[vx] >>= 1;
+        this.vreg.set(0xf, this.vreg.get(vx) & 0x1);
+        this.vreg.set(vx, this.vreg.get(vx) >> 1);
     }
 
     /*
@@ -216,10 +372,10 @@ export class Chip8 {
      */
     private subRegOpposite(vx: number, vy: number): void {
         // set Vf to 0 if borrow; set to 1 if no borrow
-        this.vregs[0xf] = this.vregs[vy] >= this.vregs[vx] ? 1 : 0;
+        this.vreg.set(0xf, this.vreg.get(vy) >= this.vreg.get(vx) ? 1 : 0);
 
         // subtract and keep 8 bits
-        this.vregs[vx] = this.vregs[vy] - this.vregs[vx];
+        this.vreg.set(vx, this.vreg.get(vy) - this.vreg.get(vx));
     }
 
     /*
@@ -228,8 +384,8 @@ export class Chip8 {
      */
     private shiftLeft(vx: number): void {
         // store msb in Vf
-        this.vregs[0xf] = (this.vregs[vx] >> 7) & 0x1;
-        this.vregs[vx] <<= 1;
+        this.vreg.set(0xf, (this.vreg.get(vx) >> 7) & 0x1);
+        this.vreg.set(vx, this.vreg.get(vx) << 1);
     }
 
     /*
@@ -238,7 +394,7 @@ export class Chip8 {
      *	(Usually the next instruction is a jump to skip a code block).
      */
     private skipIfNequalReg(vx: number, vy: number): void {
-        if (this.vregs[vx] !== this.vregs[vy]) {
+        if (this.vreg.get(vx) !== this.vreg.get(vy)) {
             this.pc.increment();
         }
     }
@@ -255,8 +411,8 @@ export class Chip8 {
      *	BNNN
      *	Jumps to the address NNN plus V0.
      */
-    private jump(targetAddr: number): void {
-        this.goto(this.vregs[0x0] + targetAddr);
+    private jump(address: number): void {
+        this.goto(this.vreg.get(0x0) + address);
     }
 
     /*
@@ -264,7 +420,7 @@ export class Chip8 {
      *	Sets VX to the result of a bitwise and operation on a random number (Typically: 0 to 255) and NN.
      */
     private setRand(vx: number, mask: number): void {
-        this.vregs[vx] = Math.floor(Math.random() * 256) & mask;
+        this.vreg.set(vx, Math.floor(Math.random() * 256) & mask);
     }
 
     /*
@@ -275,34 +431,34 @@ export class Chip8 {
      *	pixels are flipped from set to unset when the sprite is drawn, and to 0 if that doesn’t happen.
      */
     private drawSprite(vx: number, vy: number, height: number): void {
-        const xStart: number = this.vregs[vx];
-        const yStart: number = this.vregs[vy];
+        const xStart = this.vreg.get(vx);
+        const yStart = this.vreg.get(vy);
 
         // Vf set to 1 if any pixels are flipped from on to off
-        this.vregs[0xf] = 0;
+        this.vreg.set(0xf, 0);
 
-        for (let yOffset: number = 0; yOffset < height; ++yOffset) {
+        for (let yOffset = 0; yOffset < height; ++yOffset) {
             // get y coord accounting for wrap around
-            const y: number = (yStart + yOffset) % this.graphics.height;
+            const y = (yStart + yOffset) % this.graphics.height;
 
             // get yth pixel
-            const pixels: number = this.memory.load8(this.ireg + yOffset);
-            for (let xOffset: number = 0; xOffset < this.graphics.width; ++xOffset) {
+            const pixels = this.memory.load8(this.ireg + yOffset);
+            for (let xOffset = 0; xOffset < this.graphics.width; ++xOffset) {
                 // mask all bits to 0 except the xOffset'th most significant bit
-                const pixel: number = pixels & (0x80 >> xOffset);
+                const pixel = pixels & (0x80 >> xOffset);
 
                 // if the resulting number is not zero, it will cause a flip
                 if (pixel !== 0) {
                     // get x coord accounting for wrap around
-                    const x: number = (xStart + xOffset) % this.graphics.width;
+                    const x = (xStart + xOffset) % this.graphics.width;
 
-                    // // if it flips from 1 to 0, set Vf to 1
-                    // if (this.graphics.isOn(x, y)) {
-                    //   this.vregs[0xf] = 1;
-                    // }
+                    // if it flips from 1 to 0, set Vf to 1
+                    if (this.graphics.get(x, y) === 1) {
+                        this.vreg.set(0xf, 1);
+                    }
 
-                    // // flip bit
-                    // this.graphics.flipAt(x, y);
+                    // flip bit
+                    this.graphics.flip(x, y);
                 }
             }
         }
@@ -314,9 +470,9 @@ export class Chip8 {
      *	(Usually the next instruction is a jump to skip a code block).
      */
     private skipIfKeypress(vx: number): void {
-        // if (this.keys[this.vregs[vx]]) {
-        //   this.pc.increment();
-        // }
+        if (this.keyreg.get(this.vreg.get(vx))) {
+          this.pc.increment();
+        }
     }
 
     /*
@@ -325,9 +481,9 @@ export class Chip8 {
      *	(Usually the next instruction is a jump to skip a code block).
      */
     private skipIfNotKeypress(vx: number): void {
-        // if (!this.keys[this.vregs[vx]]) {
-        //   this.pc.increment();
-        // }
+        if (!this.keyreg.get(this.vreg.get(vx))) {
+          this.pc.increment();
+        }
     }
 
     /*
@@ -335,7 +491,7 @@ export class Chip8 {
      *	Sets VX to the value of the delay timer.
      */
     private getDelayTimer(vx: number): void {
-        this.vregs[vx] = this.delayTimer.getValue();
+        this.vreg.set(vx, this.delayTimer.getValue());
     }
 
     /*
@@ -356,7 +512,7 @@ export class Chip8 {
      *	Sets the delay timer to VX.
      */
     private setDelayTimer(vx: number): void {
-        this.delayTimer.setValue(this.vregs[vx]);
+        this.delayTimer.setValue(this.vreg.get(vx));
     }
 
     /*
@@ -364,7 +520,7 @@ export class Chip8 {
      *	Sets the sound timer to VX.
      */
     private setSoundTimer(vx: number): void {
-        this.soundTimer.setValue(this.vregs[vx]);
+        this.soundTimer.setValue(this.vreg.get(vx));
     }
 
     /*
@@ -373,10 +529,10 @@ export class Chip8 {
      *	and to 0 when there isn't.
      */
     private addRegToI(vx: number): void {
-        const result: number = this.ireg + this.vregs[vx];
+        const result = this.ireg + this.vreg.get(vx);
 
         // set Vf to 1 if range overflow (ireg out of memory index bounds), 0 otherwise
-        this.vregs[0xf] = result >= this.memory.size() ? 1 : 0;
+        this.vreg.set(0xf, result >= this.memory.size() ? 1 : 0);
 
         // keep it down to 16 bits
         this.ireg = result & 0xffff;
@@ -388,7 +544,7 @@ export class Chip8 {
      *	Characters 0-F (in hexadecimal) are represented by a 4x5 font.
      */
     private setIToSprite(vx: number): void {
-        this.ireg = (this.vregs[vx] * 5) & 0xffff;
+        this.ireg = (this.vreg.get(vx) * 5) & 0xffff;
     }
 
     /*
@@ -401,7 +557,7 @@ export class Chip8 {
      */
     private setBCD(vx: number): void {
         // value of Vx is 3 digit because it's an 8-bit register
-        const val = this.vregs[vx];
+        const val = this.vreg.get(vx);
 
         // get digits of register vx for BCD and store
         this.memory.store8(this.ireg, Math.floor(val / 100));
@@ -415,8 +571,8 @@ export class Chip8 {
      *	is increased by 1 for each value written, but I itself is left unmodified.
      */
     private regDump(vx: number): void {
-        for (let i: number = 0; i <= vx; ++i) {
-            this.memory.store8(this.ireg + i, this.vregs[i]);
+        for (let i = 0; i <= vx; ++i) {
+            this.memory.store8(this.ireg + i, this.vreg.get(i));
         }
     }
 
@@ -426,8 +582,8 @@ export class Chip8 {
      *	is increased by 1 for each value written, but I itself is left unmodified.
      */
     private regLoad(vx: number): void {
-        for (let i: number = 0; i <= vx; ++i) {
-            this.vregs[i] = this.memory.load8(this.ireg + i);
+        for (let i = 0; i <= vx; ++i) {
+            this.vreg.set(i, this.memory.load8(this.ireg + i));
         }
     }
 }

@@ -1,25 +1,25 @@
 export class ProgramCounter {
-    #value: number;
-    readonly #instrSize: number;
+    private _value: number;
+    private readonly _instrSize: number;
 
-    constructor(initial: number, stepSize: number) {
-        this.#value = initial;
-        this.#instrSize = stepSize;
+    public constructor(initial: number, stepSize: number) {
+        this._value = initial;
+        this._instrSize = stepSize;
     }
 
-    jump(address: number): void {
-        this.#value = address;
+    public jump(address: number): void {
+        this._value = address;
     }
 
-    increment(): void {
-        this.#value += this.#instrSize;
+    public increment(): void {
+        this._value += this._instrSize;
     }
 
     public get instructionSize(): number {
-        return this.#instrSize;
+        return this._instrSize;
     }
 
     public get value(): number {
-        return this.#value;
+        return this._value;
     }
 }
