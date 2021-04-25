@@ -6,6 +6,8 @@ const { baseConfig } = require("./webpack.base.config");
 
 module.exports = {
     ...baseConfig,
+    devtool: false,
+    mode: "production",
     plugins: [
         new webpack.DefinePlugin({
             "process.env": {
@@ -20,7 +22,6 @@ module.exports = {
         minimizer: [
             new TerserPlugin({
                 parallel: true,
-                sourceMap: false,
                 terserOptions: {
                     output: {
                         comments: false,

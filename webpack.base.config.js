@@ -6,7 +6,7 @@ const paths = {
 };
 
 const baseConfig = {
-    entry: "./src/index.tsx",
+    entry: "./src/ui/index.tsx",
     output: {
         filename: "index.js",
         path: paths.build,

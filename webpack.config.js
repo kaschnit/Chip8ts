@@ -1,8 +1,10 @@
-const { baseConfig } = require("./webpack.base.config");
+const MiniCssExtractPlugin = require("mini-css-extract-plugin");
+const { baseConfig, paths } = require("./webpack.base.config");
 
 module.exports = {
     ...baseConfig,
     devtool: "source-map",
+    mode: "development",
 	plugins: [
         new MiniCssExtractPlugin({
           filename: "style.css"
@@ -12,7 +14,7 @@ module.exports = {
         inline: true,
         port: 8080,
         hot: true,
-        contentBase: PATHS.dist,
+        contentBase: paths.build,
         historyApiFallback: {
             rewrites: [
                 {
