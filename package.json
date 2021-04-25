@@ -5,12 +5,12 @@
     "license": "MIT",
     "scripts": {
         "test": "jest",
-        "prerelease": "yarn run tsc && yarn run test && yarn run lint",
         "clean": "rm -rf ./build",
+        "lint": "eslint --ext=jsx,js,ts,tsx src",
         "tsc": "tsc -p tsconfig.prod.json --noEmit",
         "copy-index": "mkdir -p ./build && cp ./src/ui/index.html ./build",
+        "prerelease": "yarn run tsc && yarn run test && yarn run lint",
         "build": "yarn run copy-index && webpack --config ./webpack.prod.config.js --progress",
-        "lint": "eslint --ext=jsx,js,ts,tsx src",
         "start": "yarn run copy-index && webpack serve --progress"
     },
     "devDependencies": {
