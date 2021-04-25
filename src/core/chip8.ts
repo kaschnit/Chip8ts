@@ -211,6 +211,7 @@ export class Chip8 {
      */
     private call(address: number): void {
         // TODO
+        console.log("Calling", address)
     }
 
     /*
