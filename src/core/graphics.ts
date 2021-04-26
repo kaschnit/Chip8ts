@@ -23,6 +23,10 @@ export class Graphics {
         return this._dirty;
     }
 
+    public getRaw(): Uint8Array {
+        return this._graphics;
+    }
+
     public clear(): void {
         for (let i = 0; i < this._graphics.length; ++i) {
             this._graphics[i] = 0;

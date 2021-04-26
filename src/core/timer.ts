@@ -15,7 +15,7 @@ export class DelayTimer {
 
     public setValue(value: number): void {
         this._value = value;
-        if (this._interval) {
+        if (this._interval !== undefined) {
             clearInterval(this._interval);
         }
         this.startCountdown();
@@ -24,7 +24,7 @@ export class DelayTimer {
     private startCountdown(): void {
         this._interval = setInterval(() => {
             if (--this._value === 0) {
-                if (this._interval) {
+                if (this._interval !== undefined) {
                     clearInterval(this._interval);
                 }
                 this.timerHasReachedZero();
