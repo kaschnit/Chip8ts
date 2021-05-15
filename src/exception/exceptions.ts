@@ -5,7 +5,7 @@ export class BadInstructionError extends Error {
 }
 
 export class RomSizeError extends Error {
-    public constructor(size: number, maxSize: number) {
-        super(`ROM of length ${size} exceeds memory size ${maxSize}.`);
+    public constructor(size: number) {
+        super(`The ROM of size ${size} exceeds the memory bounds.`);
     }
 }

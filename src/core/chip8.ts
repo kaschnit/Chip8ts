@@ -1,42 +1,58 @@
-import { BadInstructionError } from "../exception/exceptions";
+import { BadInstructionError, RomSizeError } from "../exception/exceptions";
 import { Graphics } from "./graphics";
-import { KeyRegs } from "./keyregs";
 import { Memory } from "./memory";
 import { ProgramCounter } from "./programCounter";
 import { Stack } from "./stack";
-import { DelayTimer, SoundTimer } from "./timer";
-import { VRegisters } from "./vregs";
+import { Timer } from "./timer";
+import { Registers } from "./registers";
+import { readFileAsBytes } from "../util/utils";
+import { FONT_SET, SPRITE_WIDTH } from "../util/constants";
+import { Chip8Key } from "./keyboard";
 
+export type Chip8Params = {
+    memory: Memory;
+    stack: Stack;
+    pc: ProgramCounter;
+    graphics: Graphics;
+    delayTimer: Timer;
+    soundTimer: Timer;
+    vregs: Registers;
+    keyregs: Registers;
+};
 export class Chip8 {
     private _stack: Stack;
     private _memory: Memory;
     private _pc: ProgramCounter;
     private _graphics: Graphics;
-    private _delayTimer: DelayTimer;
-    private _soundTimer: SoundTimer;
-    private _vreg: VRegisters;
-    private _keyreg: KeyRegs;
+    private _delayTimer: Timer;
+    private _soundTimer: Timer;
+    private _vreg: Registers;
+    private _keyregs: Registers;
     private _awaitKeyReg: number | undefined;
     private _ireg: number;
 
-    public constructor(
-        memory: Memory,
-        stack: Stack,
-        pc: ProgramCounter,
-        graphics: Graphics,
-        delayTimer: DelayTimer,
-        soundTimer: SoundTimer,
-        vregs: VRegisters,
-        keyreg: KeyRegs
-    ) {
+    public constructor({
+        memory,
+        stack,
+        pc,
+        graphics,
+        delayTimer,
+        soundTimer,
+        vregs,
+        keyregs,
+    }: Chip8Params) {
         this._memory = memory;
+
+        // write the fonts to the start of the memory
+        this._memory.write(0, FONT_SET);
+
         this._stack = stack;
         this._pc = pc;
         this._graphics = graphics;
         this._delayTimer = delayTimer;
         this._soundTimer = soundTimer;
         this._vreg = vregs;
-        this._keyreg = keyreg;
+        this._keyregs = keyregs;
         this._awaitKeyReg = undefined;
         this._ireg = 0;
     }
@@ -46,7 +62,7 @@ export class Chip8 {
     }
 
     public runCycle(): void {
-        if (this._awaitKeyReg !== null) {
+        if (this._awaitKeyReg !== undefined) {
             return;
         }
 
@@ -197,6 +213,23 @@ export class Chip8 {
         this._pc.increment();
     }
 
+    public async loadRom(romFile: File): Promise<void> {
+        const romBytes: Uint8Array = await readFileAsBytes(romFile);
+        if (this._pc.initial + romBytes.length >= this._memory.size()) {
+            throw new RomSizeError(romBytes.length);
+        }
+        // write the rom into memory
+        this._memory.write(this._pc.initial, romBytes);
+    }
+
+    public setKeyPress(key: Chip8Key, pressed: boolean): void {
+        this._keyregs.set(key, pressed ? 1 : 0);
+        if (this._awaitKeyReg !== undefined && pressed) {
+            this._vreg.set(this._awaitKeyReg, key);
+            this._awaitKeyReg = undefined;
+        }
+    }
+
     /*
      *	OPCODES
      *
@@ -345,7 +378,6 @@ export class Chip8 {
         // set Vf to 1 if carry-out happened (value of bit 9 is 1 if carry-out)
         this._vreg.set(0xf, (result >> 8) & 0x1);
 
-        // mask down to 8 bit
         this._vreg.set(vx, result);
     }
 
@@ -448,7 +480,7 @@ export class Chip8 {
 
             // get yth pixel
             const pixels = this._memory.load8(this._ireg + yOffset);
-            for (let xOffset = 0; xOffset < this._graphics.width; ++xOffset) {
+            for (let xOffset = 0; xOffset < SPRITE_WIDTH; ++xOffset) {
                 // mask all bits to 0 except the xOffset'th most significant bit
                 const pixel = pixels & (0x80 >> xOffset);
 
@@ -458,7 +490,7 @@ export class Chip8 {
                     const x = (xStart + xOffset) % this._graphics.width;
 
                     // if it flips from 1 to 0, set Vf to 1
-                    if (this._graphics.get(x, y) === 1) {
+                    if (this._graphics.get(x, y) !== 0) {
                         this._vreg.set(0xf, 1);
                     }
 
@@ -475,7 +507,7 @@ export class Chip8 {
      *	(Usually the next instruction is a jump to skip a code block).
      */
     private skipIfKeypress(vx: number): void {
-        if (this._keyreg.get(this._vreg.get(vx))) {
+        if (this._keyregs.get(this._vreg.get(vx)) !== 0) {
             this._pc.increment();
         }
     }
@@ -486,7 +518,7 @@ export class Chip8 {
      *	(Usually the next instruction is a jump to skip a code block).
      */
     private skipIfNotKeypress(vx: number): void {
-        if (!this._keyreg.get(this._vreg.get(vx))) {
+        if (this._keyregs.get(this._vreg.get(vx)) === 0) {
             this._pc.increment();
         }
     }
