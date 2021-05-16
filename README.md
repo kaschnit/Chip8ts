@@ -4,7 +4,7 @@ A [CHIP-8](https://en.wikipedia.org/wiki/CHIP-8) emulator wrriten in TypeScript.
 
 Currently only running the display in a web browser is supported.
 
-To try the latest version on the `gh-pages` branch navigate to https://kaschnit.github.io/chip8ts/build/web/.
+To try the latest version on the `gh-pages` branch navigate to https://kaschnit.github.io/chip8ts/.
 
 ## Developement
 Before doing anything, you will need to run `yarn install`.

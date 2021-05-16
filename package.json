@@ -11,7 +11,8 @@
         "copy-web-assets": "mkdir -p ./build/web/ && cp -r ./src/ui/web/assets/ ./build/web/",
         "prerelease": "yarn run tsc && yarn run lint && yarn run test",
         "build": "yarn run copy-web-assets && webpack --config ./webpack.prod.config.js --progress",
-        "start": "yarn run copy-web-assets && webpack serve --progress"
+        "start": "yarn run copy-web-assets && webpack serve --progress",
+        "deploy": "yarn run build && git subtree push --prefix build/web origin gh-pages"
     },
     "devDependencies": {
         "@types/jest": "^26.0.22",
