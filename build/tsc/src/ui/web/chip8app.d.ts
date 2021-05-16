@@ -1,4 +1,5 @@
 import * as React from "react";
+import "./chip8app.scss";
 declare type Props = Record<string, never>;
 declare type State = {
     romFile: File | undefined;

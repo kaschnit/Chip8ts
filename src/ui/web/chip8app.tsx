@@ -18,10 +18,11 @@ import {
     KEYBOARD_MAPPING,
     CYCLE_HZ,
 } from "../../util/constants";
-import { range } from "../../util/utils";
 import { MonochromeDisplayController } from "./display/monochromeDisplayController";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPause, faPlay, faStop } from "@fortawesome/free-solid-svg-icons";
+
+import "./chip8app.scss";
 
 type Props = Record<string, never>;
 type State = {
@@ -69,16 +70,12 @@ export class Chip8App extends React.Component<Props, State> {
     private handleFileChange(e: React.ChangeEvent<HTMLInputElement>): void {
         this.cleanUp();
 
-        const romFile = (e?.currentTarget?.files ?? [undefined])[0];
+        const romFile = (e.currentTarget.files ?? [undefined])[0];
 
         this.setState({
-            romFile, 
+            romFile,
             running: false,
         });
-
-        if (romFile !== undefined) {
-            this.startStopEmulator();
-        }
     }
 
     private async startStopEmulator(): Promise<void> {
@@ -148,63 +145,74 @@ export class Chip8App extends React.Component<Props, State> {
     public render(): React.ReactNode {
         return (
             <div
+                className="chip8App"
                 onKeyDown={(e): void => this.chip8.setKeyPress(KEYBOARD_MAPPING[e.key], true)}
                 onKeyUp={(e): void => this.chip8.setKeyPress(KEYBOARD_MAPPING[e.key], false)}
                 tabIndex={0}
             >
-                <div>
-                    <label htmlFor="rom-upload">Upload a CHIP-8 ROM</label>{" "}
-                    <input
-                        id="rom-upload"
-                        name="rom-upload"
-                        type="file"
-                        disabled={this.state.running}
-                        onChange={(e: React.ChangeEvent<HTMLInputElement>): void =>
-                            this.handleFileChange(e)
-                        }
+                <h1 className="pageTitle">chip8ts - CHIP-8 Emulator</h1>
+                <div className="chip8">
+                    <div className="controls">
+                        <span className="controlSection">
+                            {this.state.hasStarted && (
+                                <button
+                                    disabled={this.state.romFile === undefined}
+                                    onClick={(): void => this.pauseUnpauseEmulator()}
+                                >
+                                    <FontAwesomeIcon icon={this.state.running ? faPause : faPlay} />
+                                </button>
+                            )}
+                            <button
+                                disabled={this.state.romFile === undefined}
+                                onClick={(): Promise<void> => this.startStopEmulator()}
+                            >
+                                <FontAwesomeIcon icon={this.state.hasStarted ? faStop : faPlay} />
+                            </button>
+                        </span>
+                        <span className="controlSection">
+                            <label htmlFor="scaleSlider">Scale: </label>{this.state.scale}{" "}
+                            <input
+                                type="range"
+                                id="scaleSlider"
+                                min={1}
+                                max={20}
+                                value={this.state.scale}
+                                onInput={(e: React.ChangeEvent<HTMLInputElement>): void => {
+                                    this.setState({ scale: parseFloat(e.currentTarget.value) });
+                                }}
+                            />
+                        </span>
+                        <span className="controlSection">
+                            <label htmlFor="romUpload">Upload a CHIP-8 ROM</label>{" "}
+                            <input
+                                id="romUpload"
+                                name="romUpload"
+                                type="file"
+                                disabled={this.state.running}
+                                onChange={(e: React.ChangeEvent<HTMLInputElement>): void =>
+                                    this.handleFileChange(e)
+                                }
+                            />
+                        </span>
+                    </div>
+                    <div
+                        ref={(ref): void => {
+                            if (ref !== null) {
+                                this.displayController = new MonochromeDisplayController({
+                                    width: this.chip8.graphics.width,
+                                    height: this.chip8.graphics.height,
+                                    container: ref,
+                                    scale: this.state.scale,
+                                });
+                            }
+                        }}
                     />
                 </div>
-                <div>
-                    <label htmlFor="scale-selector">Scale</label>{" "}
-                    <select
-                        id="scale-selector"
-                        name="scale-selector"
-                        onChange={(e: React.ChangeEvent<HTMLSelectElement>): void => {
-                            this.setState({ scale: parseInt(e.currentTarget.value) })
-                        }}
-                        value={this.state.scale}
-                    >
-                        {[...range(1, 21)].map((i) => <option key={`scale-${i}`} value={i}>{i}</option>)}
-                    </select>
+
+                <div className="sourceText">
+                    Source:{" "}
+                    <a href="https://github.com/kaschnit/chip8ts">github/kaschnit/chip8ts</a>
                 </div>
-                <div>
-                    { this.state.hasStarted &&
-                        <button
-                            disabled={this.state.romFile === undefined}
-                            onClick={(): void => this.pauseUnpauseEmulator()}
-                        >
-                            <FontAwesomeIcon icon={this.state.running ? faPause : faPlay}/>
-                        </button>
-                    }
-                    <button
-                        disabled={this.state.romFile === undefined}
-                        onClick={(): Promise<void> => this.startStopEmulator()}
-                    >
-                        <FontAwesomeIcon icon={this.state.hasStarted ? faStop : faPlay}/>
-                    </button>
-                </div>
-                <div
-                    ref={(ref): void => {
-                        if (ref !== null) {
-                            this.displayController = new MonochromeDisplayController({
-                                width: this.chip8.graphics.width,
-                                height: this.chip8.graphics.height,
-                                container: ref,
-                                scale: this.state.scale,
-                            });
-                        }
-                    }}
-                />
             </div>
         );
     }

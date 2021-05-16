@@ -1,0 +1,14 @@
+.chip8App {
+    height: 100%;
+    width: 100%;
+    margin-left: 8%;
+
+    .chip8 {
+        .controls {
+            .controlSection {
+                margin-right: 12px;
+            }
+        }
+        margin-bottom: 50px;
+    }
+}
