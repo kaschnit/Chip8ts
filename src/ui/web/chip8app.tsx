@@ -1,11 +1,11 @@
 import * as React from "react";
-import { Memory } from "../core/memory";
-import { Chip8 } from "../core/chip8";
-import { Graphics } from "../core/graphics";
-import { Stack } from "../core/stack";
-import { ProgramCounter } from "../core/programCounter";
-import { Timer } from "../core/timer";
-import { Registers } from "../core/registers";
+import { Memory } from "../../core/memory";
+import { Chip8 } from "../../core/chip8";
+import { Graphics } from "../../core/graphics";
+import { Stack } from "../../core/stack";
+import { ProgramCounter } from "../../core/programCounter";
+import { Timer } from "../../core/timer";
+import { Registers } from "../../core/registers";
 import {
     DISPLAY_WIDTH,
     DISPLAY_HEIGHT,
@@ -17,8 +17,8 @@ import {
     NUM_REGS,
     KEYBOARD_MAPPING,
     CYCLE_HZ,
-} from "../util/constants";
-import { MonochromeDisplayController } from "./display/monochromeDisplayController";
+} from "../../util/constants";
+import { MonochromeDisplayController } from "../display/monochromeDisplayController";
 
 type Props = Record<string, never>;
 type State = {

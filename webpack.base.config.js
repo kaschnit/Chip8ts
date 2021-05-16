@@ -2,11 +2,11 @@ const path = require("path");
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 
 const paths = {
-    build: path.resolve(__dirname, "build"),
+    build: path.resolve(__dirname, "build", "web"),
 };
 
 const baseConfig = {
-    entry: "./src/ui/index.tsx",
+    entry: "./src/ui/web/index.tsx",
     output: {
         filename: "index.js",
         path: paths.build,

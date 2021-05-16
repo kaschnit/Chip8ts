@@ -8,10 +8,10 @@
         "clean": "rm -rf ./build",
         "lint": "eslint --ext=jsx,js,ts,tsx src",
         "tsc": "tsc -p tsconfig.prod.json --noEmit",
-        "copy-index": "mkdir -p ./build && cp ./src/ui/index.html ./build",
+        "copy-web-assets": "mkdir -p ./build/web/ && cp -r ./src/ui/web/assets/ ./build/web/",
         "prerelease": "yarn run tsc && yarn run lint && yarn run test",
-        "build": "yarn run copy-index && webpack --config ./webpack.prod.config.js --progress",
-        "start": "yarn run copy-index && webpack serve --progress"
+        "build": "yarn run copy-web-assets && webpack --config ./webpack.prod.config.js --progress",
+        "start": "yarn run copy-web-assets && webpack serve --progress"
     },
     "devDependencies": {
         "@types/jest": "^26.0.22",
@@ -33,6 +33,7 @@
         "optimize-css-assets-webpack-plugin": "^5.0.4",
         "prettier": "^2.2.1",
         "sass-loader": "^11.0.1",
+        "serve": "^11.3.2",
         "style-loader": "^2.0.0",
         "terser-webpack-plugin": "^5.1.1",
         "ts-jest": "^26.5.5",

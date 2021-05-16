@@ -17,6 +17,10 @@ Run `yarn test` to run unit tests.
 Run `yarn prerelease` to run TypeScript type-checking, unit tests, and linting.
 
 ### Building
+
+#### Web UI
 Run `yarn start` to start the development server.
 
 Run `yarn buid` to bundle the code.
+
+To start up the bundled code run `yarn serve build/web -p 8080`.
