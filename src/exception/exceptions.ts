@@ -9,3 +9,9 @@ export class RomSizeError extends Error {
         super(`The ROM of size ${size} exceeds the memory bounds.`);
     }
 }
+
+export class InvalidStateError extends Error {
+    public constructor(msg: string) {
+        super(msg);
+    }
+}

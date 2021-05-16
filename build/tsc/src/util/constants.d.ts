@@ -1,0 +1,13 @@
+import { KeyboardMapping } from "../core/keyboard";
+export declare const MEMORY_SIZE: 4096;
+export declare const STACK_SIZE: 16;
+export declare const PC_START: 512;
+export declare const NUM_REGS: 16;
+export declare const SPRITE_WIDTH: 8;
+export declare const TIMER_HZ: 60;
+export declare const CYCLE_HZ: 630;
+export declare const INSTRUCTION_SIZE_BYTES: 2;
+export declare const DISPLAY_WIDTH: 64;
+export declare const DISPLAY_HEIGHT: 32;
+export declare const FONT_SET: Uint8Array;
+export declare const KEYBOARD_MAPPING: KeyboardMapping;

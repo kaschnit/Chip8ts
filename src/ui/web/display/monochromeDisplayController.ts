@@ -1,10 +1,13 @@
-import { removeChildren } from "../../util/utils";
+import { removeChildren } from "../../../util/utils";
 
-export type MonochromeDisplayParams = {
-    container: HTMLElement;
+export type SizeParams = {
     width: number;
     height: number;
     scale?: number;
+}
+
+export type MonochromeDisplayParams = SizeParams & {
+    container: HTMLElement;
 };
 
 export class MonochromeDisplayController {

@@ -23,3 +23,20 @@ export function removeChildren(element: HTMLElement): void {
         element.removeChild(element.firstChild);
     }
 }
+
+export function* range(start: number, stop?: number, step = 1): Generator<number, void, unknown> {
+    if (stop === undefined) {
+        [start, stop] = [0, start];
+    }
+    
+    if (step > 0) {
+        while (start < stop) {
+            yield start, start += step;
+        }
+    }
+    else if (step < 0) {
+        while (start > stop) {
+            yield start, start += step;
+        }
+    }
+ } 
