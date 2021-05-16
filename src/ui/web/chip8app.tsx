@@ -20,12 +20,15 @@ import {
 } from "../../util/constants";
 import { range } from "../../util/utils";
 import { MonochromeDisplayController } from "./display/monochromeDisplayController";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faPause, faPlay, faStop } from "@fortawesome/free-solid-svg-icons";
 
 type Props = Record<string, never>;
 type State = {
     romFile: File | undefined;
     scale: number;
     running: boolean;
+    hasStarted: boolean;
 };
 
 function createChip8(): Chip8 {
@@ -55,6 +58,7 @@ export class Chip8App extends React.Component<Props, State> {
             romFile: undefined,
             scale: 10,
             running: false,
+            hasStarted: false,
         };
 
         this.runInterval = undefined;
@@ -64,20 +68,29 @@ export class Chip8App extends React.Component<Props, State> {
 
     private handleFileChange(e: React.ChangeEvent<HTMLInputElement>): void {
         this.cleanUp();
+
+        const romFile = (e?.currentTarget?.files ?? [undefined])[0];
+
         this.setState({
-            romFile: (e?.currentTarget?.files ?? [undefined])[0],
+            romFile, 
             running: false,
         });
+
+        if (romFile !== undefined) {
+            this.startStopEmulator();
+        }
     }
 
     private async startStopEmulator(): Promise<void> {
-        if (this.state.romFile === undefined || this.state.running) {
+        if (this.state.romFile === undefined || this.state.hasStarted) {
             this.cleanUp();
-            this.setState({ running: false });
+            this.setState({ hasStarted: false });
             return;
         }
 
         await this.chip8.loadRom(this.state.romFile);
+
+        this.setState({ hasStarted: true });
 
         this.beginExecutionInterval();
     }
@@ -124,28 +137,6 @@ export class Chip8App extends React.Component<Props, State> {
         this.displayController?.draw(this.chip8.graphics.getRaw());
     }
 
-    private renderScaleSelector(): React.ReactNode {
-        const options = [];
-        for (let i = 1; i <= 20; ++i) {
-            options.push(<option key={`scale-${i}`} value={i}>{i}</option>);
-        }
-        return (
-            <>
-                <label htmlFor="scale-selector">Upload a Chip8 ROM</label>{" "}
-                <select
-                    id="scale-selector"
-                    name="scale-selector"
-                    onChange={(e: React.ChangeEvent<HTMLSelectElement>): void => {
-                        this.setState({ scale: parseInt(e.currentTarget.value) })
-                    }}
-                    value={this.state.scale}
-                >
-                    {Array.from(range(1, 21)).map((i) => <option key={`scale-${i}`} value={i}>{i}</option>)}
-                </select>
-            </>
-        );
-    }
-
     public componentDidUpdate(): void {
         this.displayController?.draw(this.chip8.graphics.getRaw());
     }
@@ -162,7 +153,7 @@ export class Chip8App extends React.Component<Props, State> {
                 tabIndex={0}
             >
                 <div>
-                    <label htmlFor="rom-upload">Upload a Chip8 ROM</label>{" "}
+                    <label htmlFor="rom-upload">Upload a CHIP-8 ROM</label>{" "}
                     <input
                         id="rom-upload"
                         name="rom-upload"
@@ -174,20 +165,32 @@ export class Chip8App extends React.Component<Props, State> {
                     />
                 </div>
                 <div>
-                    {this.renderScaleSelector()}
+                    <label htmlFor="scale-selector">Scale</label>{" "}
+                    <select
+                        id="scale-selector"
+                        name="scale-selector"
+                        onChange={(e: React.ChangeEvent<HTMLSelectElement>): void => {
+                            this.setState({ scale: parseInt(e.currentTarget.value) })
+                        }}
+                        value={this.state.scale}
+                    >
+                        {[...range(1, 21)].map((i) => <option key={`scale-${i}`} value={i}>{i}</option>)}
+                    </select>
                 </div>
                 <div>
+                    { this.state.hasStarted &&
+                        <button
+                            disabled={this.state.romFile === undefined}
+                            onClick={(): void => this.pauseUnpauseEmulator()}
+                        >
+                            <FontAwesomeIcon icon={this.state.running ? faPause : faPlay}/>
+                        </button>
+                    }
                     <button
                         disabled={this.state.romFile === undefined}
                         onClick={(): Promise<void> => this.startStopEmulator()}
                     >
-                        {this.state.running ? "Stop" : "Start"} ROM
-                    </button>
-                    <button
-                        disabled={this.state.romFile === undefined}
-                        onClick={(): void => this.pauseUnpauseEmulator()}
-                    >
-                        {this.state.running ? "Pause" : "Unpause"}
+                        <FontAwesomeIcon icon={this.state.hasStarted ? faStop : faPlay}/>
                     </button>
                 </div>
                 <div

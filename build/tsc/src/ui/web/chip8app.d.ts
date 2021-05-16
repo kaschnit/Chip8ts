@@ -4,6 +4,7 @@ declare type State = {
     romFile: File | undefined;
     scale: number;
     running: boolean;
+    hasStarted: boolean;
 };
 export declare class Chip8App extends React.Component<Props, State> {
     private chip8;
@@ -16,7 +17,6 @@ export declare class Chip8App extends React.Component<Props, State> {
     private stopExecutionInterval;
     private beginExecutionInterval;
     private cleanUp;
-    private renderScaleSelector;
     componentDidUpdate(): void;
     componentDidMount(): void;
     render(): React.ReactNode;
