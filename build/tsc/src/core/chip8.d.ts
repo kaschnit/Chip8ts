@@ -4,7 +4,7 @@ import { ProgramCounter } from "./programCounter";
 import { Stack } from "./stack";
 import { Timer } from "./timer";
 import { Registers } from "./registers";
-import { Chip8Key } from "./keyboard";
+import { Chip8Key } from "../ui/keyboard";
 export declare type Chip8Params = {
     memory: Memory;
     stack: Stack;

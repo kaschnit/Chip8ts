@@ -1,4 +1,4 @@
-import { KeyboardMapping } from "../core/keyboard";
+import { KeyboardMapper } from "../ui/keyboard";
 
 export const MEMORY_SIZE = 4096 as const; // number of bytes available in memory
 export const STACK_SIZE = 16 as const; // number of 16-bit memory spaces in the stack
@@ -95,22 +95,23 @@ export const FONT_SET = new Uint8Array([
     0x80, // sprite for character F
 ]);
 
-export const KEYBOARD_MAPPING: KeyboardMapping = {
-    0: 0x0,
-    1: 0x1,
-    2: 0x2,
-    3: 0x3,
-    4: 0xc,
-    q: 0x4,
-    w: 0x5,
-    e: 0x6,
-    r: 0xd,
-    a: 0x7,
-    s: 0x8,
-    d: 0x9,
-    f: 0xe,
-    z: 0xa,
-    x: 0x0,
-    c: 0xb,
-    v: 0xf,
-} as const;
+export const QWERTY_KEYS = [
+    "1",
+    "2",
+    "3",
+    "4",
+    "q",
+    "w",
+    "e",
+    "r",
+    "a",
+    "s",
+    "d",
+    "f",
+    "z",
+    "x",
+    "c",
+    "v",
+] as const;
+
+export const KEYBOARD_MAPPER = new KeyboardMapper(QWERTY_KEYS);

@@ -1,4 +1,4 @@
-import { KeyboardMapping } from "../core/keyboard";
+import { KeyboardMapper } from "../ui/keyboard";
 export declare const MEMORY_SIZE: 4096;
 export declare const STACK_SIZE: 16;
 export declare const PC_START: 512;
@@ -10,4 +10,5 @@ export declare const INSTRUCTION_SIZE_BYTES: 2;
 export declare const DISPLAY_WIDTH: 64;
 export declare const DISPLAY_HEIGHT: 32;
 export declare const FONT_SET: Uint8Array;
-export declare const KEYBOARD_MAPPING: KeyboardMapping;
+export declare const QWERTY_KEYS: readonly ["1", "2", "3", "4", "q", "w", "e", "r", "a", "s", "d", "f", "z", "x", "c", "v"];
+export declare const KEYBOARD_MAPPER: KeyboardMapper;

@@ -1,0 +1,18 @@
+.chip8App {
+    height: 100%;
+    width: 100%;
+    margin-left: 3%;
+
+    .controls {
+        .controlSection {
+            margin-right: 12px;
+        }
+    }
+
+    .gridContainer {
+        display: grid;
+        grid-template-columns: auto 300px;
+        grid-auto-flow: dense;
+        margin-bottom: 50px;        
+    }
+}

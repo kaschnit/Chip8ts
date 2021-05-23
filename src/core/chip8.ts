@@ -7,7 +7,7 @@ import { Timer } from "./timer";
 import { Registers } from "./registers";
 import { readFileAsBytes } from "../util/utils";
 import { FONT_SET, SPRITE_WIDTH } from "../util/constants";
-import { Chip8Key } from "./keyboard";
+import { Chip8Key } from "../ui/keyboard";
 
 export type Chip8Params = {
     memory: Memory;

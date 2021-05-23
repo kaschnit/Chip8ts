@@ -1,0 +1,28 @@
+.keyPad {
+	width: 100%;
+
+	.keyContainer {
+		display: grid;
+		width: 100%;
+
+		grid-template-columns: 20% 20% 20% 20%;
+		grid-template-rows: 20% 20% 20% 20%;
+		
+		.key {
+			border: 1px solid black;
+
+			&:hover {
+				cursor: pointer;
+			}
+
+			&:active {
+				background-color: darkgray;
+			}
+
+			.keyHex {
+				font-weight: bold;
+				font-size: 2em;
+			}
+		}
+	}
+}

@@ -1,6 +1,6 @@
 import * as React from "react";
 import * as ReactDOM from "react-dom";
-import { Chip8App } from "./chip8app";
+import { Chip8App } from "./components/chip8app";
 
 import "./index.scss";
 
